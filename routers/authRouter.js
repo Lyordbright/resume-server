@@ -8,6 +8,7 @@ import {
   changePassword,
   resendVerification,
 } from "../controllers/authController.js";
+import { googleAuth } from "../controllers/googleAuthController.js";
 import { protect } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
@@ -16,6 +17,7 @@ router.post("/signup", signup);
 router.post("/login", login);
 router.get("/verify-email/:token", verifyEmail);
 router.post("/verify-auth", verifyAuth);
+router.post("/google", googleAuth);
 
 // Account management (requires auth)
 router.put("/profile", protect, updateProfile);

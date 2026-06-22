@@ -127,6 +127,76 @@ export const login = async (req, res, next) => {
 };
 
 
+export const googleAuth = async (req, res, next) => {
+  const { credential } = req.body;
+
+  if (!credential) {
+    return res.status(400).json({ status: "error", message: "Google credential is required" });
+  }
+
+  try {
+    // Decode the Google JWT credential (verify with Google)
+    const response = await fetch(
+      `https://oauth2.googleapis.com/tokeninfo?id_token=${credential}`
+    );
+    const googleUser = await response.json();
+
+    if (googleUser.error) {
+      return res.status(401).json({ status: "error", message: "Invalid Google token" });
+    }
+
+    // Check the token was issued for our app
+    if (googleUser.aud !== process.env.GOOGLE_CLIENT_ID) {
+      return res.status(401).json({ status: "error", message: "Token client mismatch" });
+    }
+
+    const { email, given_name, family_name, picture } = googleUser;
+
+    // Find or create user
+    let user = await userModel.findOne({ email });
+
+    if (!user) {
+      user = await userModel.create({
+        firstName: given_name || "User",
+        lastName: family_name || "",
+        email,
+        password: `google_${Date.now()}_${Math.random()}`, // placeholder, never used
+        emailVerified: true, // Google already verified it
+        googleAuth: true,
+      });
+    } else {
+      // If user exists but signed up with email, mark as also having Google
+      if (!user.emailVerified) {
+        user.emailVerified = true;
+        await user.save();
+      }
+    }
+
+    const token = jwt.sign(
+      { id: user._id, email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    return res.status(200).json({
+      status: "success",
+      message: "Google login successful",
+      token,
+      user: {
+        id: user._id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        emailVerified: user.emailVerified,
+      },
+    });
+  } catch (error) {
+    console.error("Google auth error:", error);
+    next(error);
+  }
+};
+
+
 export const verifyEmail = async (req, res, next) => {
   const { token } = req.params;
 
@@ -308,3 +378,4 @@ export const resendVerification = async (req, res, next) => {
     next(error);
   }
 };
+
