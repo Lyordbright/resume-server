@@ -12,24 +12,22 @@ connectToDb();
 const app = express();
 const PORT = process.env.PORT || 4005;
 
+// middleware
 app.use(express.json());
 app.use(cors());
 app.use(morgan("dev"));
 
-// Routes
-app.get("/api/v1", (req, res) => {
-  res.send("Welcome to my AI Resume Generator");
-});
-
+// routes
+app.get("/api/v1", ...);
 app.use("/api/v1/auth", router);
-
-app.listen(PORT, () => {
-  console.log(`✅ Server running on port ${PORT}`);
-});
-
 app.use("/api/v1/resumes", resumeRouter);
-
 app.use("/api/v1/ai", aiRouter);
+
+// error handler
+app.use((err, req, res, next) => { ... });
+
+// start server
+app.listen(PORT, () => { ... });
 
 app.use((err, req, res, next) => {
   console.error(err);
