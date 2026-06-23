@@ -6,28 +6,24 @@ import connectToDb from "./config/connectToDb.js";
 import router from "./routers/authRouter.js";
 import resumeRouter from "./routers/resumeRouter.js";
 import aiRouter from "./routers/aiRouter.js";
+
 dotenv.config();
 connectToDb();
 
 const app = express();
 const PORT = process.env.PORT || 4005;
 
-// middleware
 app.use(express.json());
 app.use(cors());
 app.use(morgan("dev"));
 
-// routes
-app.get("/api/v1", ...);
+app.get("/api/v1", (req, res) => {
+  res.send("Welcome to my AI Resume Generator");
+});
+
 app.use("/api/v1/auth", router);
 app.use("/api/v1/resumes", resumeRouter);
 app.use("/api/v1/ai", aiRouter);
-
-// error handler
-app.use((err, req, res, next) => { ... });
-
-// start server
-app.listen(PORT, () => { ... });
 
 app.use((err, req, res, next) => {
   console.error(err);
@@ -35,4 +31,8 @@ app.use((err, req, res, next) => {
     status: "error",
     message: err.message || "Internal server error"
   });
+});
+
+app.listen(PORT, () => {
+  console.log(`✅ Server running on port ${PORT}`);
 });
